@@ -11,6 +11,7 @@
 
 # --- Allow: global instructions ---
 !CLAUDE.md
+!README.md
 
 # --- Allow: settings (exclude local overrides) ---
 !settings.json
