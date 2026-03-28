@@ -1,0 +1,40 @@
+# ============================================
+# Whitelist strategy: ignore everything first,
+# then explicitly allow tracked files.
+# ============================================
+
+# Ignore everything by default
+*
+
+# --- Allow: git infrastructure ---
+!.gitignore
+
+# --- Allow: global instructions ---
+!CLAUDE.md
+
+# --- Allow: settings (exclude local overrides) ---
+!settings.json
+settings.local.json
+*.local.json
+
+# --- Block: secrets / sensitive files ---
+.env
+.env.*
+*.pem
+*.key
+
+# --- Allow: hooks ---
+!hooks/
+!hooks/**
+
+# --- Allow: rules ---
+!rules/
+!rules/**
+
+# --- Allow: skills ---
+!skills/
+!skills/**/
+!skills/**/SKILL.md
+
+# --- Allow: statusline ---
+!statusline-command.sh
