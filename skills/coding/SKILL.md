@@ -14,10 +14,9 @@ disable-model-invocation: false
 프로덕션 코딩 스킬. `/coding`으로 호출하여 코딩 모드 진입.
 
 ## Design 연계
-사용자가 명시적 구현 요구사항 없이 "설계안 구현", "위 설계 구현" 등으로 호출하면:
-1. `{project_root}/.claude/state/design-*.json` 중 가장 최근 파일을 탐색한다.
-2. 해당 상태 파일의 `artifact_paths.consensus` + `artifact_paths.decision_rationale` + `artifact_paths.impact_analysis`를 읽어 구현 명세로 사용한다.
-3. 상태 파일을 찾지 못하면 사용자에게 경로를 질문한다.
+사용자가 "설계안 구현" 등으로 호출하며 **design 상태 파일 경로를 명시적으로 전달한 경우에만** 해당 파일을 읽어 구현 명세로 사용한다.
+- 경로가 없으면 사용자에게 질문한다. **자동으로 state 디렉토리를 탐색하지 않는다.**
+- `/design` 완료 시 보고된 상태 파일 경로를 사용자가 그대로 전달하는 것을 기대한다.
 
 ## 스케일링
 - 모든 변경: ~/.claude/rules/principles.md 준수.
