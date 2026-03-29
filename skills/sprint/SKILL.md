@@ -28,39 +28,22 @@
 
 ## Phase 2: 설계
 
+→ ~/.claude/rules/round-agent-protocol.md 적용 (중규모/대규모).
+
 ### 소규모: 생략
 사전 분석 결과만으로 바로 Phase 3으로.
 
 ### 중규모: 간소 설계
-- 메인 에이전트가 단독으로 설계안을 작성한다.
-- 파일/함수 단위 변경 명세 + 구현 순서 정리.
-- subagent 1개로 설계안 검증 (~/.claude/rules/principles.md 기준, 기존 아키텍처 충돌 여부).
-- 문제 없으면 Phase 3으로. 문제 있으면 수정 후 재검증 1회.
-- 그래도 통과 못 하면 사용자에게 제시하고 판단 요청.
+- DesignRoundAgent subagent 1개를 생성하여 위임한다.
+- Round Agent 내부: 단독 설계안 작성 + sub-subagent 1개로 검증.
+- 문제 없으면 PASS. 문제 있으면 수정 후 재검증 1회.
+- FAIL로 반환 시 사용자에게 제시하고 판단 요청.
 
 ### 대규모: 전체 설계
-
-#### Design Step 1: 독립 설계
-- 복수의 subagent를 병렬 생성. 서로의 존재를 알리지 않는다.
-- 각 agent에게 요구사항 + 사전 분석 결과를 전달.
-- 각 subagent는 독립적으로 설계안을 제시.
-
-#### Design Step 2: 합의안 도출
-- 공통점: 높은 신뢰도로 채택.
-- 차이점: 각 근거를 비교하여 우위 판단, 근거 명시.
-- 모두 다르면: trade-off 정리하여 사용자에게 선택 요청.
-
-#### Design Step 3: 합의안 검증
-- 합의안을 새 subagent에게 전달하여 독립 검증 (도출 과정 미전달).
-- 검증 관점: ~/.claude/rules/principles.md SOLID/구현 규칙 위반, 기존 아키텍처 충돌, 구현 불가능 부분, 누락 엣지케이스.
-- 문제 없음 → Design Step 4로.
-- 문제 있음 → 지적 반영 후 Design Step 1로. 2회 반복 후에도 미통과 시 사용자에게 제시.
-
-#### Design Step 4: 변경 영향도 분석
-- 직접 수정 파일 목록.
-- 간접 영향 파일 (import하는 곳).
-- 테스트 수정/추가 필요 범위.
-- 마이그레이션 필요 여부.
+- `/design`의 설계 루프와 동일하게 DesignRoundAgent를 활용한다.
+- 매 iteration마다 DesignRoundAgent dispatch. 내부에서 독립 설계 + 합의 + 검증 수행.
+- 메인은 verdict, critical_issues, modification_approaches만 추적.
+- 2회 반복 후에도 미통과 시 사용자에게 제시.
 
 ### 설계안 제출 (중규모/대규모 공통)
 - 변경 명세 (파일/클래스/함수 단위).
@@ -68,9 +51,15 @@
 - 리스크 및 롤백 전략 (대규모만).
 - **사용자 승인을 받는다. 승인 없이 구현하지 않는다.**
 
+### Phase 2 → Phase 3 전환 시 정보 전달
+- **전달**: 확정 설계안 (변경 명세 + 구현 순서 + 리스크) + 핵심 설계 결정 근거 (decision_rationale).
+- **차단**: 대안으로 검토했다가 버린 설계안, 합의 과정의 논쟁, 개별 subagent 설계안.
+
 ---
 
 ## Phase 3: 구현
+
+→ ~/.claude/rules/round-agent-protocol.md 적용 (중규모/대규모).
 
 설계안의 구현 순서에 따라 순차 구현. 모든 변경은 ~/.claude/rules/principles.md를 준수.
 
@@ -79,23 +68,14 @@
 
 ### 중규모/대규모 (10줄 이상): 검증 루프
 
-#### Step 1: 자기 검증
-- 빌드 실행하여 통과 확인. 실패 시 Step 2로 넘어가지 않는다.
-- 타입체크 실행하여 에러 0 확인.
-- 테스트 실행하여 전체 통과 확인. 테스트가 없으면 작성 후 실행.
-- 실제 실행하여 의도한 동작이 되는지 확인 (API면 호출, UI면 렌더링, CLI면 실행).
-- 기존 코드와 스타일 일관성 확인.
-- 새 의존성 추가 시 사용자에게 고지.
-- 하나라도 실패하면 수정 후 Step 1을 처음부터.
+메인 세션은 thin orchestrator로 동작한다. 최초 구현 후 검증 루프의 각 라운드를 CodingRoundAgent에 위임한다.
 
-#### Step 2: 독립 리뷰 (Subagent)
-- 리뷰 전용 subagent 생성.
-- 변경된 파일 경로만 전달. 구현 의도/과정은 전달하지 않는다.
-- ~/.claude/rules/review.md와 ~/.claude/rules/principles.md를 기준으로 삼으라고 지시.
-- Critical 또는 Major가 있으면 Step 3으로. 없으면 Phase 4로.
-
-#### Step 3: 수정 후 재검증
-- Critical/Major 수정 → Step 1로 (이전 검증 참고하지 않음, 매번 새로).
+- 매 라운드마다 CodingRoundAgent dispatch.
+- Round Agent 수신: 설계안 파일 경로 + 변경 파일 경로 + 빌드/테스트 명령.
+- Round Agent 내부: `/coding`의 CodingRoundAgent와 동일 (Step 1 자기 검증 → Step 2 독립 리뷰 → Step 3 수정 재검증).
+- 메인은 verdict, critical_issues, modification_approaches만 추적.
+- verdict == PASS → Phase 4. FAIL → 다음 라운드 dispatch.
+- escalation → round-agent-protocol.md의 Cross-Round Escalation 적용.
 
 ---
 
@@ -110,11 +90,12 @@
 ---
 
 ## 매몰 방지
-→ ~/.claude/rules/escalation.md 참조.
+→ ~/.claude/rules/round-agent-protocol.md Cross-Round Escalation + ~/.claude/rules/escalation.md 참조.
+설계(Phase 2)와 구현(Phase 3) 각각 독립적으로 escalation을 추적한다.
 
 ## 원칙
 - 모든 변경: ~/.claude/rules/principles.md 준수.
 - 프로젝트에 `.claude/rules/workflow.md`가 있으면 해당 Git 워크플로우를 따른다.
 - 기존 아키텍처를 최대한 존중. 새 패턴 도입 시 기존 패턴과의 공존 방안 명시.
 - 과도 설계 금지. 현재 요구사항에 필요한 만큼만.
-- 설계와 구현 사이에 컨텍스트 손실 없이 설계안을 구현에 그대로 반영한다.
+- Phase 간 전환 시 확정 산출물(설계안 텍스트 + decision_rationale)만 전달한다. 과정은 전달하지 않는다.
