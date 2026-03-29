@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 model: opus
 effort: high
-allowed-tools: Read, Glob, Grep, Bash, Agent
+allowed-tools: Read, Write, Glob, Grep, Bash, Agent
 disable-model-invocation: true
 ---
 

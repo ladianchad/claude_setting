@@ -6,7 +6,7 @@ context: fork
 agent: general-purpose
 model: opus
 effort: high
-allowed-tools: Read, Edit, Write, Glob, Grep, Bash, Agent
+allowed-tools: Read, Edit, Write, Glob, Grep, Bash, Agent, Skill
 disable-model-invocation: true
 ---
 
@@ -52,10 +52,9 @@ disable-model-invocation: true
 - FAIL로 반환 시 사용자에게 제시하고 판단 요청.
 
 ### 대규모: 전체 설계
-- `/design`의 설계 루프와 동일하게 DesignRoundAgent를 활용한다.
-- 매 iteration마다 DesignRoundAgent dispatch. 내부에서 독립 설계 + 합의 + 검증 수행.
-- 메인은 verdict, critical_issues, modification_approaches만 추적.
-- 2회 반복 후에도 미통과 시 사용자에게 제시.
+- Skill tool로 `/design`을 직접 호출하여 전체 설계 프로세스를 실행한다.
+- `/design`이 내부에서 DesignRoundAgent를 활용하여 독립 설계 + 합의 + 검증을 수행한다.
+- 설계안 제출 결과(합의안 + decision_rationale + impact_analysis)를 수신한다.
 
 ### 설계안 제출 (중규모/대규모 공통)
 - 변경 명세 (파일/클래스/함수 단위).
