@@ -3,43 +3,62 @@
 논문 작성 → 심사 → 수정 → 재심사를 Accept까지 반복하는 오케스트레이션 스킬.
 `/paper_submit`으로 호출. `/paper` + `/paper_exam`을 자동 체이닝한다.
 
+→ ~/.claude/rules/round-agent-protocol.md 적용.
+
 ## 입력
 `/paper`와 동일. 핵심 기여, 소스 자료, 타겟 venue 등.
+
+## 오케스트레이션 원칙
+
+메인 세션은 thin orchestrator로 동작한다.
+- 라운드 간 보유 상태: round_number, verdict, paper_file_path, critical_issues (현재 + 이전), modification_approaches (현재 + 이전).
+- 각 라운드는 독립 Round Agent가 내부에서 완결한다.
+- 분석 context는 라운드 간 전달되지 않는다.
 
 ## 프로세스
 
 ### Round 1: 초고 작성
-- `/paper` skill의 전체 프로세스를 수행한다 (Phase 0~4).
+- WritingRoundAgent subagent를 생성하여 `/paper` skill의 전체 프로세스를 위임한다 (Phase 0~4).
 - Phase 3(작성 중 검증)을 통과한 논문이 산출물.
-- 산출물 파일 경로를 확보하고 Round 2로.
+- 메인은 paper_file_path만 수신하고 Round 2로.
 
 ### Round 2+: 심사 → 수정 루프
 
-#### Step 1: 심사
-- `/paper_exam` skill의 Full 프로세스를 수행한다.
-- 현재 논문 파일 + 타겟 venue를 전달.
-- **매 라운드 완전 독립**: 심사 패널은 매번 새 subagent. 이전 라운드의 심사 결과, 수정 내역, 컨텍스트를 일절 전달하지 않는다. 논문 파일만 전달한다.
+매 라운드마다 독립적으로 수행한다. 이전 라운드의 심사 결과, 수정 내역, 컨텍스트를 일절 전달하지 않는다.
 
-#### Step 2: 판정 확인
+#### Step 1: 심사
+- ExamRoundAgent subagent를 생성하여 `/paper_exam` Full 프로세스를 위임한다.
+- 전달: paper_file_path + 타겟 venue.
+- ExamRoundAgent는 `/paper_exam` Phase 4 보고서를 프로토콜 형식으로 변환하여 반환한다:
+  - 최종 판정 → `verdict` (Accept 이상 = PASS, Borderline 이하 = FAIL)
+  - 약점 Critical/Major → `critical_issues` (`[Section]:[Category]:[keyword]` 형식)
+  - Phase 4 보고서 전문 → `exam_report_path` (디스크 파일)
+  - 요약 → `round_summary_path`
+
+#### Step 2: 판정 확인 (메인이 수행)
 - **Accept 이상** (Strong Accept / Accept): 종료 → 최종 보고로.
 - **Weak Accept + Critical 0**: 사용자에게 투고 여부 확인. 투고 시 종료, 수정 시 Step 3으로.
 - **Borderline 이하**: Step 3으로.
 
 #### Step 3: 수정
-- `/paper_exam` 보고서의 수정 권고를 기반으로 논문을 수정한다.
-- 수정 시 `/paper`의 Phase 3 Step 1(자기 검증)만 적용한다. 전문가 심사는 Step 1의 `/paper_exam`이 담당한다.
+- RevisionRoundAgent subagent를 생성한다.
+- 전달: paper_file_path + exam_report_path (디스크 파일).
+- RevisionRoundAgent 내부: exam 보고서 기반 수정 + `/paper`의 Phase 3 Step 1(자기 검증) 적용.
 - Critical → Major → Minor 순으로 수정.
+- 수신: modified_file_path + modification_approaches + round_summary_path.
 - 수정 완료 후 Step 1로 (새 라운드).
 
 ### 라운드 독립성
 - 라운드 횟수 제한 없음. Accept까지 계속한다.
-- 각 라운드의 심사/수정은 완전히 독립적인 세션이다:
-  - 심사: 새 subagent, 이전 라운드 결과 미전달.
-  - 수정: 현재 논문 + 현재 라운드의 심사 보고서만 참조. 과거 라운드 수정 이력 미참조.
+- 각 라운드는 독립 Round Agent로 실행된다.
+- 메인 세션은 verdict와 critical_issues, modification_approaches만 보유한다.
+- Round Agent 내부의 심사 보고서, 수정 과정은 메인에 반환되지 않는다.
+- 라운드별 상세는 round_summary_path 파일로 디스크에 기록된다.
 
 ### 매몰 방지
-- 동일 이슈가 2라운드 연속 Critical/Major로 지적되면:
-  → ~/.claude/rules/escalation.md 적용 (subagent 위임 → 에스컬레이션).
+→ ~/.claude/rules/round-agent-protocol.md Cross-Round Escalation + ~/.claude/rules/escalation.md 참조.
+- 메인이 critical_issues + modification_approaches를 라운드 간 비교한다.
+- 동일 issue + 동일/유사 approach가 2 consecutive rounds → escalation.md 적용.
 - 매몰 방지 에스컬레이션 시 사용자에게 선택지 제시:
   1. 새 subagent에게 해당 이슈 위임
   2. 타겟 venue 변경
@@ -53,8 +72,8 @@
 
 Accept 도달 시 아래를 제출:
 - **최종 논문 파일 경로**.
-- **라운드별 심사 이력**: 각 라운드의 verdict + 주요 이슈 + 수정 내역.
-- **최종 심사 보고서**: 마지막 `/paper_exam` 출력.
+- **라운드별 심사 이력**: 각 round_summary_path 파일을 수집. 메인은 verdict 목록만 직접 보유.
+- **최종 심사 보고서**: 마지막 ExamRoundAgent의 exam_report_path.
 - **투고 체크리스트**:
   - [ ] venue 포맷/페이지 제한 준수
   - [ ] 참고문헌 완결성
