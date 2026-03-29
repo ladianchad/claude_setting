@@ -5,7 +5,7 @@ context: fork
 agent: general-purpose
 model: opus
 effort: high
-allowed-tools: Read, Write, Glob, Grep, Bash, Agent
+allowed-tools: Read, Write, Glob, Grep, Bash, Agent, Skill
 disable-model-invocation: true
 ---
 
@@ -29,18 +29,17 @@ disable-model-invocation: true
 ## 프로세스
 
 ### Round 1: 초고 작성
-- WritingRoundAgent subagent를 생성하여 `/paper` skill의 전체 프로세스를 위임한다 (Phase 0~4).
+- Skill tool로 `/paper`를 직접 호출하여 전체 프로세스(Phase 0~4)를 실행한다.
 - Phase 3(작성 중 검증)을 통과한 논문이 산출물.
-- 메인은 paper_file_path만 수신하고 Round 2로.
+- paper_file_path를 수신하고 Round 2로.
 
 ### Round 2+: 심사 → 수정 루프
 
 매 라운드마다 독립적으로 수행한다. 이전 라운드의 심사 결과, 수정 내역, 컨텍스트를 일절 전달하지 않는다.
 
 #### Step 1: 심사
-- ExamRoundAgent subagent를 생성하여 `/paper_exam` Full 프로세스를 위임한다.
-- 전달: paper_file_path + 타겟 venue.
-- ExamRoundAgent는 `/paper_exam` Phase 4 보고서를 프로토콜 형식으로 변환하여 반환한다:
+- Skill tool로 `/paper_exam`을 직접 호출한다 (paper_file_path + 타겟 venue 전달).
+- `/paper_exam` Phase 4 보고서를 수신한 후, 프로토콜 형식으로 변환한다:
   - 최종 판정 → `verdict` (Accept 이상 = PASS, Borderline 이하 = FAIL)
   - 약점 Critical/Major → `critical_issues` (`[Section]:[Category]:[keyword]` 형식)
   - Phase 4 보고서 전문 → `exam_report_path` (디스크 파일)
@@ -61,7 +60,7 @@ disable-model-invocation: true
 
 ### 라운드 독립성
 - 라운드 횟수 제한 없음. Accept까지 계속한다.
-- 각 라운드는 독립 Round Agent로 실행된다.
+- 각 라운드는 독립적으로 실행된다 (Skill 호출 또는 Round Agent).
 - 메인 세션은 verdict와 critical_issues, modification_approaches만 보유한다.
 - Round Agent 내부의 심사 보고서, 수정 과정은 메인에 반환되지 않는다.
 - 라운드별 상세는 round_summary_path 파일로 디스크에 기록된다.

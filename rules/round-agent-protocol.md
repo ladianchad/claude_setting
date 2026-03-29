@@ -1,7 +1,7 @@
 # Round Agent Protocol
 
 라운드 기반 workflow에서 메인 세션과 Round Agent의 역할을 규정한다.
-직접 참조하는 skill: design, coding, sprint, paper, paper_submit.
+직접 참조하는 skill: design, coding, sprint, refactor, paper, paper_submit.
 (paper_exam은 자체적으로 라운드 기반이 아니나, paper_submit 내에서 Round Agent로 감싸여 실행된다.)
 
 ## 메인 세션 (Orchestrator)
@@ -38,7 +38,7 @@
 
 ### 단일 Round Agent 모델
 하나의 Round Agent가 분석/수정을 모두 수행하고 반환한다.
-적용: design, coding, sprint.
+적용: design, coding, sprint, refactor.
 
 ### Review + Revision 분리 모델
 한 라운드 안에서 ReviewRoundAgent(리뷰 전담)와 RevisionRoundAgent(수정 전담)를 순차 dispatch한다.
