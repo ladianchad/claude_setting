@@ -1,3 +1,15 @@
+---
+name: paper_exam
+description: 논문 투고 전 최종 심사. PC Reviewer + 기술 전문가 + Area Chair 독립 심사 시뮬레이션.
+argument-hint: [quick] [논문경로] [venue]
+context: fork
+agent: general-purpose
+model: opus
+effort: high
+allowed-tools: Read, Write, Glob, Grep, Bash, Agent
+disable-model-invocation: true
+---
+
 # Paper Exam
 
 완성된 논문의 투고 전 최종 심사 스킬. `/paper_exam`으로 호출.

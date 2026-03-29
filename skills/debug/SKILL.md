@@ -1,3 +1,14 @@
+---
+name: debug
+description: 체계적 디버깅. 가설 수립 → 검증 → 이분 탐색 → 근본 원인 수정.
+context: fork
+agent: general-purpose
+model: opus
+effort: high
+allowed-tools: Read, Edit, Write, Glob, Grep, Bash, Agent
+disable-model-invocation: true
+---
+
 # Systematic Debugging
 
 체계적 디버깅 스킬. `/debug`로 호출.

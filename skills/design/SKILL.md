@@ -1,3 +1,14 @@
+---
+name: design
+description: 아키텍처 설계. 다중 에이전트 독립 설계 → 합의 → 검증 → 영향도 분석.
+context: fork
+agent: general-purpose
+model: opus
+effort: high
+allowed-tools: Read, Glob, Grep, Bash, Agent
+disable-model-invocation: true
+---
+
 # Architecture Design
 
 아키텍처 설계 스킬. 큰 기능 추가나 구조 변경 전 `/design`으로 호출.

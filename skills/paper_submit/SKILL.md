@@ -1,3 +1,14 @@
+---
+name: paper_submit
+description: 논문 작성→심사→수정→재심사를 Accept까지 반복. /paper + /paper_exam 자동 체이닝.
+context: fork
+agent: general-purpose
+model: opus
+effort: high
+allowed-tools: Read, Write, Glob, Grep, Bash, Agent
+disable-model-invocation: true
+---
+
 # Paper Submit
 
 논문 작성 → 심사 → 수정 → 재심사를 Accept까지 반복하는 오케스트레이션 스킬.

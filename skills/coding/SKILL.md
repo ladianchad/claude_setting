@@ -1,3 +1,14 @@
+---
+name: coding
+description: 프로덕션 코딩. 구현 + 빌드/테스트 검증 + 독립 리뷰 라운드 루프.
+context: fork
+agent: general-purpose
+model: opus
+effort: high
+allowed-tools: Read, Edit, Write, Glob, Grep, Bash, Agent
+disable-model-invocation: true
+---
+
 # Production Coding
 
 프로덕션 코딩 스킬. `/coding`으로 호출하여 코딩 모드 진입.
