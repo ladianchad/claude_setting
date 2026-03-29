@@ -36,6 +36,7 @@ Claude Code를 프로덕션 수준으로 제어하는 설정 모음. rules, hook
     ├── design/SKILL.md              # 아키텍처 설계 (다중 에이전트 합의)
     ├── sprint/SKILL.md              # 요구사항 → 설계 → 구현 원스톱
     ├── refactor/SKILL.md            # 코드베이스 분석 + 리팩토링
+    ├── search/SKILL.md              # 기술 리서치 (라이브러리/방법론 탐색)
     ├── paper/SKILL.md               # 논문 작성 (전문가 패널 라운드)
     ├── paper_exam/SKILL.md          # 투고 전 모의 심사
     ├── paper_review/SKILL.md        # 논문 분석/리뷰
@@ -55,6 +56,7 @@ Claude Code를 프로덕션 수준으로 제어하는 설정 모음. rules, hook
 | **design** | `/design` | opus | high | Read, Glob, Grep, Bash, Agent |
 | **sprint** | `/sprint <파일>` | opus | high | Read, Edit, Write, Glob, Grep, Bash, Agent |
 | **refactor** | `/refactor` | opus | high | Read, Edit, Write, Glob, Grep, Bash, Agent |
+| **search** | `/search <주제>` | opus | high | Read, Glob, Grep, Bash, Agent, WebSearch, WebFetch |
 
 ### 논문
 
