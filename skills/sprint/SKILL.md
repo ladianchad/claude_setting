@@ -1,3 +1,15 @@
+---
+name: sprint
+description: 요구사항 파일 → 설계 → 구현 → 검증 원스톱 수행.
+argument-hint: [요구사항파일경로]
+context: fork
+agent: general-purpose
+model: opus
+effort: high
+allowed-tools: Read, Edit, Write, Glob, Grep, Bash, Agent
+disable-model-invocation: true
+---
+
 # Sprint
 
 요구사항 파일을 받아 설계 → 구현 → 검증까지 원스톱 수행. `/sprint <파일경로>`로 호출.

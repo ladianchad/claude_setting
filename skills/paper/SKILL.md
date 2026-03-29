@@ -1,3 +1,15 @@
+---
+name: paper
+description: 학술 논문 작성. 아웃라인 합의 → 섹션별 병렬 작성 → 전문가 패널 리뷰 루프.
+argument-hint: [short]
+context: fork
+agent: general-purpose
+model: opus
+effort: high
+allowed-tools: Read, Write, Glob, Grep, Bash, Agent
+disable-model-invocation: true
+---
+
 # Paper Writing
 
 학술 논문 작성 스킬. `/paper`로 호출. `/paper short`로 짧은 글 모드.
