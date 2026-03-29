@@ -6,7 +6,7 @@ agent: general-purpose
 model: opus
 effort: high
 allowed-tools: Read, Write, Glob, Grep, Bash, Agent, Skill
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Paper Submit

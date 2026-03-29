@@ -7,7 +7,7 @@ agent: general-purpose
 model: opus
 effort: high
 allowed-tools: Read, Edit, Write, Glob, Grep, Bash, Agent, Skill
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Refactor
