@@ -60,7 +60,8 @@ disable-model-invocation: true
 - 변경 명세 (파일/클래스/함수 단위).
 - 구현 순서 (의존성 순).
 - 리스크 및 롤백 전략 (대규모만).
-- **사용자 승인을 받는다. 승인 없이 구현하지 않는다.**
+- 요구사항이 명확하고 설계안이 자명하면 Phase 3으로 자동 전환한다.
+- 트레이드오프가 있거나 요구사항 해석이 갈리는 경우에만 사용자에게 핵심 결정 사항을 제시하고 승인을 받는다.
 
 ### Phase 2 → Phase 3 전환 시 정보 전달
 - **전달**: 확정 설계안 (변경 명세 + 구현 순서 + 리스크) + 핵심 설계 결정 근거 (decision_rationale).
@@ -77,16 +78,12 @@ disable-model-invocation: true
 ### 소규모 (10줄 미만)
 바로 구현 → 빌드/테스트 통과 확인 후 완료.
 
-### 중규모/대규모 (10줄 이상): 검증 루프
+### 중규모/대규모 (10줄 이상): `/coding` 호출
 
-메인 세션은 thin orchestrator로 동작한다. 최초 구현 후 검증 루프의 각 라운드를 CodingRoundAgent에 위임한다.
-
-- 매 라운드마다 CodingRoundAgent dispatch.
-- Round Agent 수신: 설계안 파일 경로 + 변경 파일 경로 + 빌드/테스트 명령.
-- Round Agent 내부: `/coding`의 CodingRoundAgent와 동일 (Step 1 자기 검증 → Step 2 독립 리뷰 → Step 3 수정 재검증).
-- 메인은 verdict, critical_issues, modification_approaches만 추적.
-- verdict == PASS → Phase 4. FAIL → 다음 라운드 dispatch.
-- escalation → round-agent-protocol.md의 Cross-Round Escalation 적용.
+Skill tool로 `/coding`을 호출하여 구현을 위임한다.
+- 전달: 확정 설계안 (변경 명세 + 구현 순서) + 빌드/테스트 명령.
+- `/coding`이 내부에서 병렬 구현 + 통합 + 병렬 리뷰 검증 루프를 수행한다.
+- `/coding` 완료 후 결과(modified_files, summary)를 수신하여 Phase 4로.
 
 ---
 

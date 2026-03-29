@@ -5,10 +5,13 @@ Claude Code를 프로덕션 수준으로 제어하는 설정 모음. rules, hook
 ## 특징
 
 - **Teammate Mode**: 모든 skill이 `context: fork`로 격리된 subagent에서 실행. skill별 model/effort/allowed-tools 차등 설정
-- **검증 루프**: 구현 후 빌드/타입체크/테스트 자기 검증 + subagent 독립 리뷰
+- **병렬 구현**: 복수 에이전트가 독립 구현 → 관리자가 최선안 통합
+- **다관점 병렬 리뷰**: 정확성 리뷰어 + 설계 리뷰어(프로젝트 전체 DRY/SOLID 검증) 병렬 수행
 - **매몰 방지**: 같은 접근 2회 실패 시 subagent 위임 → 사용자 에스컬레이션
 - **안전장치**: PreToolUse hooks로 force push, 민감 파일 접근, `git commit -a` 등 사전 차단
-- **다중 에이전트 합의**: 설계/논문 작성 시 복수 subagent 병렬 생성 → 합의안 도출
+- **다중 에이전트 합의**: 설계/구현/논문 작성 시 복수 subagent 병렬 생성 → 합의안 도출
+- **Skill 체이닝**: sprint/refactor → `/design` → `/coding` 자동 호출, paper_submit → `/paper` → `/paper_exam` 자동 호출
+- **조건부 승인**: 자명한 경우 자동 진행, 트레이드오프가 있을 때만 사용자 확인
 - **스케일링**: 변경 규모(10줄 미만/이상/100줄 이상)에 따라 검증 강도 자동 조절
 - **SOLID 원칙 기반**: 모든 코딩/리뷰에 SOLID + LoD 원칙을 일관 적용
 
