@@ -40,14 +40,14 @@ disable-model-invocation: true
 
 ## Phase 2: 설계
 
-→ ~/.claude/rules/round-agent-protocol.md 적용 (중규모/대규모).
+→ ~/.claude/rules/round-agent-protocol.md 적용 (중규모/대규모). Thin Loop + 상태 파일 규약.
 
 ### 소규모: 생략
 사전 분석 결과만으로 바로 Phase 3으로.
 
 ### 중규모: 간소 설계
-- DesignRoundAgent subagent 1개를 생성하여 위임한다.
-- Round Agent 내부: 단독 설계안 작성 + sub-subagent 1개로 검증.
+- 상태 파일을 생성하고 DesignOrchestratorAgent 1개를 dispatch한다.
+- OrchestratorAgent 내부: 단독 설계안 작성 + sub-subagent 1개로 검증. 상태 파일 갱신.
 - 문제 없으면 PASS. 문제 있으면 수정 후 재검증 1회.
 - FAIL로 반환 시 사용자에게 제시하고 판단 요청.
 

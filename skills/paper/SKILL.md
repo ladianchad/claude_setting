@@ -100,31 +100,28 @@ disable-model-invocation: true
 
 ## Phase 3: 검증 루프 (전문가 패널 리뷰)
 
-→ ~/.claude/rules/round-agent-protocol.md 적용.
+→ ~/.claude/rules/round-agent-protocol.md 적용 (Thin Loop + 상태 파일 규약).
 
 ### 개요
 Critical/Major 이슈가 0이 될 때까지 라운드를 반복한다. 최대 횟수 제한 없음.
 
-메인 세션은 thin orchestrator로 동작한다. 매 라운드마다 ReviewRoundAgent와 RevisionRoundAgent를 순차 dispatch하여 리뷰와 수정을 위임한다. 메인에 라운드 내부의 분석 context가 잔류하지 않는다.
+### 메인 세션 (Thin Loop)
+1. 상태 파일 생성: `artifact_paths`에 `paper_file_path`, `outline_file_path` 기록. `requirements`에 venue 정보, 도메인, 핵심 기술 영역, 논문 유형, 패널 구성 정보 기록.
+2. loop:
+   a. 상태 파일 Read → `current_verdict` 확인.
+   b. PASS → Phase 4.
+   c. Cross-Round Escalation 체크 (상태 파일의 `rounds` 배열 비교).
+   d. fresh ReviewOrchestratorAgent dispatch (상태 파일 경로만 전달).
+   e. 상태 파일 Read → verdict 확인.
+   f. PASS → Phase 4.
+   g. FAIL → fresh RevisionOrchestratorAgent dispatch (상태 파일 경로만 전달).
+   h. goto 2.
 
-### 메인 세션 역할 (Phase 3)
-- 추적 상태: round_number, verdict, critical_issues, modification_approaches, paper_file_path, round_summary_path 목록.
-- 매 라운드:
-  1. ReviewRoundAgent dispatch → verdict + critical_issues + review_report_path 수신.
-  2. verdict == PASS → Phase 4.
-  3. verdict == FAIL → RevisionRoundAgent dispatch (paper_file_path + review_report_path 전달).
-  4. RevisionRoundAgent → modified_file_path + modification_approaches 수신.
-  5. 다음 라운드 (새 ReviewRoundAgent).
-- escalation → round-agent-protocol.md의 Cross-Round Escalation 적용.
+### ReviewOrchestratorAgent (fresh Agent)
 
-### ReviewRoundAgent (subagent)
-
-메인으로부터 수신:
-- paper_file_path
-- outline_file_path
-- venue 정보 (이름, 심사 기준, 포맷)
-- 도메인, 핵심 기술 영역, 논문 유형
-- 전문가 패널 구성 정보 (Phase 0에서 확정)
+상태 파일에서 수신:
+- `artifact_paths`: paper_file_path, outline_file_path
+- `requirements`: venue 정보, 도메인, 핵심 기술 영역, 논문 유형, 패널 구성 정보
 
 이전 라운드의 리뷰 결과, 수정 내역, 컨텍스트를 수신하지 않는다. 매번 논문을 처음 보는 것처럼 판단한다.
 
@@ -249,18 +246,17 @@ Round Agent가 모든 리뷰 결과를 통합한다.
 - 리뷰 통합 결과를 review_report 파일로 디스크에 기록한다.
 - 라운드 요약을 round_summary 파일로 기록한다.
 
-메인에 반환:
-- verdict: PASS | FAIL
-- critical_issues (round-agent-protocol.md 형식)
-- review_report_path: 디스크 상의 리뷰 보고서 경로
-- round_summary_path
-- summary
+상태 파일 갱신:
+- `rounds` 배열에 리뷰 라운드 추가 (verdict, critical_issues, round_summary_path).
+- `artifact_paths.review_report_path` 갱신.
+- `current_verdict`, `critical_issues` 최신화.
 
-### RevisionRoundAgent (subagent)
+메인에 반환: verdict + summary.
 
-메인으로부터 수신:
-- paper_file_path
-- review_report_path (디스크 파일 — ReviewRoundAgent가 기록한 리뷰 보고서)
+### RevisionOrchestratorAgent (fresh Agent)
+
+상태 파일에서 수신:
+- `artifact_paths`: paper_file_path, review_report_path
 
 이전 라운드의 수정 내역, 과거 리뷰는 수신하지 않는다.
 
@@ -269,11 +265,11 @@ Round Agent가 모든 리뷰 결과를 통합한다.
 - 수정 시 새로운 문제를 만들지 않도록 주변 맥락을 함께 점검.
 - Step 1(자기 검증)을 수행하여 구조/내용/형식 검증.
 
-메인에 반환:
-- modified_file_path
-- modification_approaches (round-agent-protocol.md 형식): 각 이슈별 수정 접근 1줄 요약
-- round_summary_path
-- summary
+상태 파일 갱신:
+- `rounds` 배열에 수정 라운드 추가 (modification_approaches, round_summary_path).
+- `artifact_paths.paper_file_path` 갱신 (수정된 논문 경로).
+
+메인에 반환: summary.
 
 ---
 

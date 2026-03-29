@@ -21,9 +21,11 @@ disable-model-invocation: true
 
 ## 오케스트레이션 원칙
 
-메인 세션은 thin orchestrator로 동작한다.
-- 라운드 간 보유 상태: round_number, verdict, paper_file_path, critical_issues (현재 + 이전), modification_approaches (현재 + 이전).
-- 각 라운드는 독립 Round Agent가 내부에서 완결한다.
+→ ~/.claude/rules/round-agent-protocol.md 적용 (Thin Loop + 상태 파일 규약).
+
+메인 세션은 **thin loop**로 동작한다. 상태 파일로 라운드 간 상태를 관리하며, 매 라운드마다 fresh Agent를 생성한다.
+- 상태 파일에 관리: round_number, verdict, paper_file_path, critical_issues, modification_approaches, exam_report_path.
+- 각 라운드는 독립 fresh Agent가 내부에서 완결하고 상태 파일을 갱신한다.
 - 분석 context는 라운드 간 전달되지 않는다.
 
 ## 프로세스
@@ -45,29 +47,27 @@ disable-model-invocation: true
   - Phase 4 보고서 전문 → `exam_report_path` (디스크 파일)
   - 요약 → `round_summary_path`
 
-#### Step 2: 판정 확인 (메인이 수행)
+#### Step 2: 판정 확인 (메인이 상태 파일 Read 후 수행)
 - **Accept 이상** (Strong Accept / Accept): 종료 → 최종 보고로.
-- **Weak Accept + Critical 0**: Accept를 목표로 Step 3으로 자동 진행한다. 단, 직전 라운드도 Weak Accept + Critical 0이었으면 개선 여지가 낮으므로 사용자에게 투고/계속 여부를 확인한다.
+- **Weak Accept + Critical 0**: Accept를 목표로 Step 3으로 자동 진행한다. 단, 상태 파일의 `rounds` 배열에서 직전 라운드도 Weak Accept + Critical 0이었으면 개선 여지가 낮으므로 사용자에게 투고/계속 여부를 확인한다.
 - **Borderline 이하**: Step 3으로.
 
 #### Step 3: 수정
-- RevisionRoundAgent subagent를 생성한다.
-- 전달: paper_file_path + exam_report_path (디스크 파일).
-- RevisionRoundAgent 내부: exam 보고서 기반 수정 + `/paper`의 Phase 3 Step 1(자기 검증) 적용.
+- fresh RevisionOrchestratorAgent를 생성한다 (상태 파일 경로만 전달).
+- OrchestratorAgent가 상태 파일에서 paper_file_path + exam_report_path를 읽고, exam 보고서 기반 수정 + `/paper`의 Phase 3 Step 1(자기 검증) 적용.
 - Critical → Major → Minor 순으로 수정.
-- 수신: modified_file_path + modification_approaches + round_summary_path.
+- 상태 파일 갱신: modified_file_path, modification_approaches, round_summary_path.
 - 수정 완료 후 Step 1로 (새 라운드).
 
 ### 라운드 독립성
 - 라운드 횟수 제한 없음. Accept까지 계속한다.
-- 각 라운드는 독립적으로 실행된다 (Skill 호출 또는 Round Agent).
-- 메인 세션은 verdict와 critical_issues, modification_approaches만 보유한다.
-- Round Agent 내부의 심사 보고서, 수정 과정은 메인에 반환되지 않는다.
-- 라운드별 상세는 round_summary_path 파일로 디스크에 기록된다.
+- 각 라운드는 독립적으로 실행된다 (Skill 호출 또는 fresh OrchestratorAgent).
+- 메인 세션은 상태 파일만 Read/Write한다. 라운드 상세를 context에 보유하지 않는다.
+- OrchestratorAgent 내부의 심사 보고서, 수정 과정은 상태 파일의 round_summary_path로만 기록된다.
 
 ### 매몰 방지
 → ~/.claude/rules/round-agent-protocol.md Cross-Round Escalation + ~/.claude/rules/escalation.md 참조.
-- 메인이 critical_issues + modification_approaches를 라운드 간 비교한다.
+- 메인이 **상태 파일의 `rounds` 배열**에서 마지막 2 라운드의 modification_approaches를 비교한다.
 - 동일 issue + 동일/유사 approach가 2 consecutive rounds → escalation.md 적용.
 - 매몰 방지 에스컬레이션 시 사용자에게 선택지 제시:
   1. 새 subagent에게 해당 이슈 위임

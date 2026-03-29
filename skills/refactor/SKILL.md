@@ -85,14 +85,14 @@ Phase 1 완료 후 식별된 리팩토링 항목으로 규모를 판단한다:
 
 ## Phase 2: 리팩토링 설계
 
-→ ~/.claude/rules/round-agent-protocol.md 적용 (중규모/대규모).
+→ ~/.claude/rules/round-agent-protocol.md 적용 (중규모/대규모). Thin Loop + 상태 파일 규약.
 
 ### 소규모: 생략
 Phase 1 분석 결과만으로 바로 Phase 3.
 
 ### 중규모: 간소 설계
-- RefactorDesignRoundAgent subagent 1개를 생성하여 위임한다.
-- Round Agent 내부: 단독 리팩토링 설계안 작성 + sub-subagent 1개로 검증.
+- 상태 파일을 생성하고 RefactorDesignOrchestratorAgent 1개를 dispatch한다.
+- OrchestratorAgent 내부: 단독 리팩토링 설계안 작성 + sub-subagent 1개로 검증. 상태 파일 갱신.
 - 검증 관점:
   - 리팩토링 후 기존 테스트가 깨지지 않는가.
   - 외부 인터페이스(public API)가 변경되는가. 변경되면 호출부 영향도 명시.
