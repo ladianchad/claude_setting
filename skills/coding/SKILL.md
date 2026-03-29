@@ -6,12 +6,18 @@ agent: general-purpose
 model: opus
 effort: high
 allowed-tools: Read, Edit, Write, Glob, Grep, Bash, Agent
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Production Coding
 
 프로덕션 코딩 스킬. `/coding`으로 호출하여 코딩 모드 진입.
+
+## Design 연계
+사용자가 명시적 구현 요구사항 없이 "설계안 구현", "위 설계 구현" 등으로 호출하면:
+1. `{project_root}/.claude/state/design-*.json` 중 가장 최근 파일을 탐색한다.
+2. 해당 상태 파일의 `artifact_paths.consensus` + `artifact_paths.decision_rationale` + `artifact_paths.impact_analysis`를 읽어 구현 명세로 사용한다.
+3. 상태 파일을 찾지 못하면 사용자에게 경로를 질문한다.
 
 ## 스케일링
 - 모든 변경: ~/.claude/rules/principles.md 준수.
@@ -21,23 +27,22 @@ disable-model-invocation: true
 
 ## 검증 루프 (10줄 이상 변경 시 필수)
 
-→ ~/.claude/rules/round-agent-protocol.md 적용.
+→ ~/.claude/rules/round-agent-protocol.md 적용 (Thin Loop + 상태 파일 규약).
 
-메인 세션은 thin orchestrator로 동작한다. 매 라운드를 CodingRoundAgent subagent에 위임한다. 에러 0일 때만 완료 보고.
+### 메인 세션 (Thin Loop)
+1. 상태 파일 생성: requirements에 구현 명세 + 대상 파일 경로 기록.
+2. loop:
+   a. 상태 파일 Read → `current_verdict` 확인.
+   b. PASS → 완료 보고.
+   c. Cross-Round Escalation 체크 (상태 파일의 `rounds` 배열 비교).
+   d. fresh CodingOrchestratorAgent dispatch (상태 파일 경로 + review.md, principles.md 참조 지시).
+   e. goto 2.
 
-### 메인 세션 역할
-- 매 라운드마다 CodingRoundAgent dispatch.
-- 추적 상태: round_number, verdict, critical_issues, modification_approaches.
-- verdict == PASS → 완료 보고.
-- verdict == FAIL → 다음 라운드의 CodingRoundAgent dispatch.
-- escalation → round-agent-protocol.md의 Cross-Round Escalation 적용.
+### CodingOrchestratorAgent (fresh Agent)
 
-### CodingRoundAgent (subagent)
-
-메인으로부터 수신:
-- 요구사항 / 구현 명세
-- 대상 파일 경로
-- review.md, principles.md 참조 지시
+상태 파일에서 수신:
+- requirements (구현 명세 + 대상 파일 경로)
+- 최신 라운드의 critical_issues (수정/리뷰 과정은 미수신)
 
 내부에서 수행:
 
@@ -92,12 +97,13 @@ disable-model-invocation: true
   - Step 3(자기 검증)을 처음부터 다시 수행한다 (내부 반복).
   - **Step 4(병렬 리뷰)는 라운드당 1회만 수행한다. 재리뷰가 필요하면 FAIL verdict로 반환.**
 
-메인에 반환 (round-agent-protocol.md 형식):
-- verdict: PASS | FAIL (ESCALATE는 사용하지 않음 — 메인이 cross-round 비교로 escalation 판단)
-- critical_issues, modification_approaches
-- modified_files
-- round_summary_path
-- summary
+상태 파일 갱신 (round-agent-protocol.md 형식):
+- `rounds` 배열에 새 라운드 추가 (verdict, critical_issues, modification_approaches, round_summary_path).
+- `artifact_paths.modified_files` 갱신.
+- `current_verdict`, `critical_issues` 최신화.
+- ESCALATE는 사용하지 않음 — 메인이 cross-round 비교로 escalation 판단.
+
+메인에 반환: verdict + summary.
 
 ## 원칙
 - 프로젝트에 `.claude/rules/workflow.md`가 있으면 해당 Git 워크플로우를 따른다.

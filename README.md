@@ -44,7 +44,7 @@ Claude Code를 프로덕션 수준으로 제어하는 설정 모음. rules, hook
 
 ## Skills
 
-모든 skill은 `context: fork`로 격리된 subagent에서 실행된다 (teammate mode). `disable-model-invocation: true`로 명시적 `/command` 호출만 허용.
+모든 skill은 `context: fork`로 격리된 subagent에서 실행된다 (teammate mode). `disable-model-invocation: false`로 명시적 `/command` 호출만 허용.
 
 ### 개발
 

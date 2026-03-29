@@ -7,7 +7,7 @@ agent: general-purpose
 model: opus
 effort: high
 allowed-tools: Read, Edit, Write, Glob, Grep, Bash, Agent, Skill
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Sprint
@@ -17,6 +17,7 @@ disable-model-invocation: true
 ## 입력
 - 요구사항 파일 경로 (.md 등)를 인자로 받는다.
 - 파일을 읽고 기능/비기능 요구사항을 추출한다.
+- **Design 연계**: 요구사항 파일 대신 "설계안 구현" 등으로 호출하면, `{project_root}/.claude/state/design-*.json` 중 최신 파일의 설계안을 요구사항으로 사용한다. 이 경우 Phase 2(설계)를 건너뛰고 바로 Phase 3(구현)으로 진행한다.
 
 ## 스케일링 판단
 요구사항을 분석하여 규모를 판단한다:
@@ -40,14 +41,14 @@ disable-model-invocation: true
 
 ## Phase 2: 설계
 
-→ ~/.claude/rules/round-agent-protocol.md 적용 (중규모/대규모).
+→ ~/.claude/rules/round-agent-protocol.md 적용 (중규모/대규모). Thin Loop + 상태 파일 규약.
 
 ### 소규모: 생략
 사전 분석 결과만으로 바로 Phase 3으로.
 
 ### 중규모: 간소 설계
-- DesignRoundAgent subagent 1개를 생성하여 위임한다.
-- Round Agent 내부: 단독 설계안 작성 + sub-subagent 1개로 검증.
+- 상태 파일을 생성하고 DesignOrchestratorAgent 1개를 dispatch한다.
+- OrchestratorAgent 내부: 단독 설계안 작성 + sub-subagent 1개로 검증. 상태 파일 갱신.
 - 문제 없으면 PASS. 문제 있으면 수정 후 재검증 1회.
 - FAIL로 반환 시 사용자에게 제시하고 판단 요청.
 

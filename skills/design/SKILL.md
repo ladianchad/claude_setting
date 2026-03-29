@@ -6,7 +6,7 @@ agent: general-purpose
 model: opus
 effort: high
 allowed-tools: Read, Write, Glob, Grep, Bash, Agent
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Architecture Design
@@ -23,24 +23,24 @@ disable-model-invocation: true
 
 ## 2. 설계 루프
 
-→ ~/.claude/rules/round-agent-protocol.md 적용.
+→ ~/.claude/rules/round-agent-protocol.md 적용 (Thin Loop + 상태 파일 규약).
 
-메인 세션은 thin orchestrator로 동작한다. 매 iteration마다 DesignRoundAgent subagent를 생성하여 설계 작업을 위임한다.
+### 메인 세션 (Thin Loop)
+1. 상태 파일 생성: requirements에 사전 분석 결과 + 요구사항 기록.
+2. loop:
+   a. 상태 파일 Read → `current_verdict` 확인.
+   b. PASS → Phase 3(설계안 제출)로.
+   c. Cross-Round Escalation 체크 (상태 파일의 `rounds` 배열 비교).
+   d. 2회 반복 후에도 FAIL → 상태 파일의 최신 consensus + 미해결 쟁점을 사용자에게 제시하고 판단 요청.
+   e. fresh DesignOrchestratorAgent dispatch (상태 파일 경로만 전달).
+   f. goto 2.
 
-### 메인 세션 역할
-- Phase 1(사전 분석) 수행 (1회성).
-- 매 iteration마다 DesignRoundAgent dispatch.
-- 추적 상태: round_number, verdict, critical_issues, modification_approaches.
-- verdict == PASS → 설계안 제출로.
-- verdict == FAIL → 다음 iteration의 DesignRoundAgent dispatch.
-- 2회 반복 후에도 FAIL → 현재까지의 합의안 + 미해결 쟁점을 사용자에게 제시하고 판단 요청.
-- escalation → round-agent-protocol.md의 Cross-Round Escalation 적용.
+### DesignOrchestratorAgent (fresh Agent)
 
-### DesignRoundAgent (subagent)
-
-메인으로부터 수신:
-- 요구사항 + 사전 분석 결과
-- iteration 2+: 이전 합의안 텍스트 + 이전 critical issue 제목 (도출 과정/개별 설계안은 미전달)
+상태 파일에서 수신:
+- requirements (사전 분석 결과 + 요구사항)
+- artifact_paths.consensus (iteration 2+: 이전 합의안)
+- 최신 라운드의 critical_issues (도출 과정/개별 설계안은 미수신)
 
 내부에서 수행:
 
@@ -68,21 +68,20 @@ disable-model-invocation: true
 - 테스트 수정/추가 필요 범위.
 - 마이그레이션 필요 여부.
 
-메인에 반환:
-- verdict: PASS | FAIL | ESCALATE
-- critical_issues, modification_approaches (round-agent-protocol.md 형식)
-- consensus: 합의안 텍스트
-- decision_rationale: 핵심 설계 결정 근거 (1~2문장씩)
-- impact_analysis: 변경 영향도 (PASS인 경우)
-- round_summary_path: 디스크에 기록한 라운드 상세
-- summary: 요약
+상태 파일 갱신 (round-agent-protocol.md 형식):
+- `rounds` 배열에 새 라운드 추가 (verdict, critical_issues, modification_approaches, round_summary_path).
+- `artifact_paths` 갱신: `consensus`, `decision_rationale`, `impact_analysis` (PASS인 경우).
+- `current_verdict`, `critical_issues` 최신화.
+
+메인에 반환: verdict + summary.
 
 ## 3. 설계안 제출
 - 선택한 대안 + 선택 근거.
 - 파일/클래스 단위 변경 명세.
 - 구현 순서 (의존성 순).
 - 리스크 및 롤백 전략.
-- 설계안을 보고하고 종료한다. 구현하지 않는다. 구현은 사용자가 `/coding` 또는 `/sprint`로 별도 진행한다.
+- **상태 파일 경로를 사용자에게 명시적으로 보고한다.** (예: `설계 상태 파일: {path}`)
+- 설계안을 보고하고 종료한다. 구현하지 않는다. 사용자가 `/coding` 또는 `/sprint`로 별도 진행하면 상태 파일을 자동 탐색한다.
 
 ## 원칙
 - 기존 아키텍처를 최대한 존중. 새 패턴 도입 시 기존 패턴과의 공존 방안 명시.

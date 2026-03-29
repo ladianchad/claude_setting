@@ -7,7 +7,7 @@ agent: general-purpose
 model: opus
 effort: medium
 allowed-tools: Read, Glob, Grep
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Paper Review
