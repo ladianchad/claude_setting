@@ -49,7 +49,7 @@ disable-model-invocation: false
 
 #### Step 2: 판정 확인 (메인이 상태 파일 Read 후 수행)
 - **Accept 이상** (Strong Accept / Accept): 종료 → 최종 보고로.
-- **Weak Accept + Critical 0**: Accept를 목표로 Step 3으로 자동 진행한다. 단, 상태 파일의 `rounds` 배열에서 직전 라운드도 Weak Accept + Critical 0이었으면 개선 여지가 낮으므로 사용자에게 투고/계속 여부를 확인한다.
+- **Weak Accept + Critical 0**: Accept를 목표로 Step 3으로 자동 진행한다. 단, 직전 라운드도 Weak Accept + Critical 0이었으면 개선 여지가 낮으므로 사용자에게 투고/계속 여부를 확인한다.
 - **Borderline 이하**: Step 3으로.
 
 #### Step 3: 수정
