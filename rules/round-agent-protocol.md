@@ -37,8 +37,8 @@
 
 ### skill별 artifact_paths
 - design: `consensus`, `decision_rationale`, `impact_analysis`
-- coding: `modified_files`
-- paper: `paper_file_path`, `outline_file_path`
+- coding: `modified_files`, `pre_existing_handled`, `static_analysis_report`, `coverage_report`
+- paper: `paper_file_path`, `outline_file_path`, `review_report_path`
 - paper_submit: `paper_file_path`, `exam_report_path`
 
 ## 메인 세션 (Thin Loop)
