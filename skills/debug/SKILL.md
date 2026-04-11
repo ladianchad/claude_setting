@@ -40,8 +40,15 @@ disable-model-invocation: false
 - 회귀 방지 테스트 추가.
 
 ## 수정 후 검증
-- 빌드/타입체크 실행하여 통과 확인.
+- **정적 분석** (`/coding` 의 Step 3 Static Analysis 블록과 동일 범위):
+  - 빌드 / 파서 에러 확인.
+  - 타입체크 (tsc, mypy, clippy 등) 에러 0 확인.
+  - 린터 (eslint, ruff, golangci-lint, shellcheck 등) 경고/에러 0 확인.
+  - 포매터 (prettier, black, gofmt, rustfmt 등) 위반 0 확인. 자동 수정 가능하면 적용.
+  - 프로젝트가 복잡도 임계값을 설정해둔 경우 복잡도 재검사.
+  - 도구 탐색 순서: 프로젝트 기존 스크립트 → 없으면 언어 표준 도구 도입 (도입 시 보고).
 - 테스트 실행하여 전체 통과 확인.
+- **회귀 방지 테스트의 커버리지**는 ~/.claude/rules/principles.md "테스트 커버리지" 섹션을 적용 (diff 90% AND 파일 90%).
 - 원래 재현 조건으로 실제 실행하여 수정 확인.
 - 하나라도 실패하면 수정 철회 후 가설 수립으로 돌아간다.
 
