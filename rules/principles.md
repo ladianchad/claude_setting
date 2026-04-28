@@ -54,3 +54,40 @@
 4. 사용자가 명시적으로 "건드리지 말라"고 한 경우에만 위 절차를 건너뛰고 보고에만 포함한다.
 
 모든 경우에 완료 보고에 **"발견한 pre-existing 이슈 + 처리 방식 (포함/sub-task/sequential/보류)"**을 명시한다.
+
+## 중복 코드 검사 (모든 변경 공통)
+
+모든 코드 수정/피쳐 추가 시 아래를 점검한다. 사용자가 명시적으로 제외 지시한 경우에만 면제.
+
+- **DRY 위반 탐지**: 이번 변경에서 추가/수정한 로직과 동일/유사한 로직이 프로젝트 내 다른 곳에 이미 존재하는지 탐색한다. 단순 diff 비교가 아니라 기능/의도 기준으로 유사성을 판단한다.
+- **기존 추상화 재사용**: 프로젝트에 이미 있는 유틸, 헬퍼, 베이스 클래스, 공용 모듈을 우회해 같은 로직을 새로 작성하지 않는다. 있으면 그것을 쓴다.
+- **발견 시 처리**: 위 "Pre-existing 문제 처리" 절차와 동일하게 규모 기준으로 분류 (강결합 소규모 → 같은 커밋 통합 / 중간 규모 → sub-task / 대규모 → sequential sprint).
+- **완료 보고**: 중복 검출 결과(발견 0건인 경우도 명시) + 처리 방식을 기록한다.
+
+## 주석 작성 (모든 변경 공통)
+
+코드 주석은 **WHY**만 적는다. WHAT은 식별자/시그니처가 표현한다. 추가로 아래 두 가지를 코드/주석에 절대 남기지 않는다. 사용자가 명시적으로 허용한 경우에만 면제.
+
+1. **사용자 사적 룰 파일 인용 금지**: `~/.claude/CLAUDE.md`, `~/.claude/rules/principles.md`, `~/.claude/rules/review.md`, `~/.claude/rules/escalation.md`, `~/.claude/rules/round-agent-protocol.md` 등 사용자 환경에만 존재하는 파일을 코드/주석에서 참조하지 않는다. 다른 협업자(다른 머신/CI/리뷰어)에게는 존재하지 않는 죽은 링크가 된다.
+   - 금지 예: `follows principles.md "구현체가 하나뿐인 인터페이스 만들지 않는다"`, `the project's guideline ([principles.md] "구현체 1개 인터페이스 금지")`, `see ~/.claude/rules/...`
+   - 결정 근거를 적고 싶으면 **룰 이름이 아니라 WHY를 인라인으로** 한 문장으로 풀어쓴다. 예: `// 단일 구현이라 인터페이스를 분리하지 않는다`.
+
+2. **세션/워크플로우 산출물 인용 금지**: `consensus §X`, `consensus.md`, `decision_rationale §X`, `impact_analysis`, `round-NNN-summary`, `OrchestratorAgent`, `verdict`, `critical issue` 같은 라운딩 어휘 + "the design consensus for this sprint", "during an earlier sprint", "in this phase", "previous round", "round 2 결정" 같은 워크플로우 표현을 코드 주석에 적지 않는다. 이들은 `.claude/state/` 안의 일회성 산출물을 가리키며 코드와 함께 영구히 살아남을 정보가 아니다 — 산출물이 사라지면 주석은 죽은 참조가 된다.
+   - 결정 근거는 산출물 위치가 아니라 **WHY를 인라인으로** 풀어쓴다. 예: 금지 `// Direction-of-dependency rule (consensus §0.2): ...` → 허용 `// Direction-of-dependency rule: promotion infra MUST NOT inject infrastructure/site write services. ...`
+
+예외: 프로젝트에 실재하는 파일(예: `backend/CLAUDE.md`, `README.md`, `docs/*.md`)에 대한 참조는 허용. 단 *내용*을 인라인으로 풀어 쓰는 편이 항상 더 낫다.
+
+발견 시 처리: "Pre-existing 문제 처리"와 동일한 규모 기준으로 같은 커밋 / sub-task / sequential sprint로 정리한다. 작업 완료 보고에 **"주석 워크플로우 잔재 검출 결과 + 처리 방식"**을 명시한다.
+
+## 실제 실행 검증 (모든 변경 공통)
+
+테스트 통과와 별개로, 변경된 코드가 실제로 포함된 **main program**을 기동/실행하여 에러 없이 동작하는지 확인한다. 사용자가 명시적으로 제외 지시한 경우에만 면제.
+
+- **서버/웹 서비스**: 기동 후 최소 health check + 이번 변경이 영향을 주는 주요 엔드포인트 1~2개를 실제 호출하여 응답 확인.
+- **CLI**: 대표 커맨드 실행. 이번 변경이 영향을 주는 flag/서브커맨드를 실제로 쳐본다.
+- **라이브러리**: import + 대표 API 호출(예제 스크립트 작성 또는 REPL). 타입체크만으로 갈음하지 않는다.
+- **프론트엔드/UI**: dev 서버 기동 + 변경 영역을 브라우저에서 실제 조작. 자동 테스트 통과만으로 UI 정상성을 판단하지 않는다.
+
+실패 유형(크래시, unhandled exception, 포트 충돌, 외부 의존성 연결 실패, 잘못된 응답) 발생 시 변경을 수정한다. 환경 문제(로컬 Redis 미기동 등)로 실행이 불가능하면 사용자에게 보고하고 최소 의존성을 기동시켜 검증한다.
+
+완료 보고에 **"실제 실행 검증: 수행 방법 + 결과"**를 명시한다. 테스트 통과 보고와 별도 항목으로 기재한다.

@@ -86,6 +86,7 @@ disable-model-invocation: false
 ## 원칙
 - 기존 아키텍처를 최대한 존중. 새 패턴 도입 시 기존 패턴과의 공존 방안 명시.
 - 과도 설계 금지. 현재 요구사항에 필요한 만큼만.
+- **설계 산출물의 어휘(`consensus §X`, `decision_rationale §X`, `impact_analysis`, `round-NNN-summary`, "this sprint", "this round" 등)는 `.claude/state/` 산출물 안에만 산다. 후속 `/coding`·`/sprint` 가 작성하는 코드/주석에 이 어휘가 유출되지 않도록 설계안 텍스트에서도 결정 근거는 WHY로 풀어쓰고, 산출물 §번호는 설계안 외부로 새지 않게 한다.** 세부: `~/.claude/rules/principles.md` "주석 작성" 절.
 
 ## 매몰 방지
 → ~/.claude/rules/round-agent-protocol.md Cross-Round Escalation + ~/.claude/rules/escalation.md 참조.

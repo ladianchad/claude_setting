@@ -132,6 +132,7 @@ Skill tool로 `/coding`을 호출하여 구현을 위임한다.
 - 기존 아키텍처를 최대한 존중. 새 패턴 도입 시 기존 패턴과의 공존 방안 명시.
 - 과도 설계 금지. 현재 요구사항에 필요한 만큼만.
 - Phase 간 전환 시 확정 산출물(설계안 텍스트 + decision_rationale)만 전달한다. 과정은 전달하지 않는다.
+- **작성하는 코드/주석에 사적 룰 파일(`~/.claude/CLAUDE.md`, `~/.claude/rules/*`, `principles.md` 등) 인용 또는 세션 산출물 어휘(`consensus §X`, `decision_rationale §X`, `impact_analysis`, `round-NNN-summary`, `the design consensus for this sprint`, `during an earlier sprint`, `in this phase` 등) 유출 금지**. 결정 근거는 룰 이름이 아니라 WHY를 인라인으로 풀어쓴다. Phase 4 완료 보고 전 변경 파일에 위 패턴이 남았는지 grep 으로 점검 — 검출되면 같은 sprint 안에서 정리. 세부 규칙: `~/.claude/rules/principles.md` "주석 작성" 절.
 
 ## Worktree CWD 준수
 
