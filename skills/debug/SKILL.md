@@ -60,3 +60,4 @@ disable-model-invocation: false
 - 한 번에 하나만 변경. 동시에 여러 곳 수정하면 원인 특정 불가.
 - 디버깅 코드(console.log, print)는 수정 완료 후 반드시 제거.
 - 프로젝트에 `.claude/rules/workflow.md`가 있으면 해당 Git 워크플로우를 따른다.
+- **모든 변경: ~/.claude/rules/principles.md 준수.** 특히 "Pre-existing 문제 처리", "중복 코드 검사", "실제 실행 검증" 항목은 bug fix 시에도 예외 없이 적용한다.

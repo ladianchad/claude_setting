@@ -157,6 +157,7 @@ StaticAnalysisAgent가 실패를 보고하면 Orchestrator는 직접 수정 후 
 
 ## 원칙
 - 프로젝트에 `.claude/rules/workflow.md`가 있으면 해당 Git 워크플로우를 따른다.
+- **작성하는 코드/주석에 사적 룰 파일(`~/.claude/CLAUDE.md`, `~/.claude/rules/*`, `principles.md` 등) 인용 또는 세션 산출물 어휘(`consensus §X`, `decision_rationale §X`, `impact_analysis`, `round-NNN-summary`, `the design consensus for this sprint`, `during an earlier sprint`, `in this phase`, `OrchestratorAgent`, `verdict`, `critical issue` 등 `.claude/state/` 산출물을 가리키는 표현) 유출 금지**. 결정 근거는 룰 이름이 아니라 WHY를 인라인으로 풀어쓴다. 구현 직후 자기 검증 단계(Step 3)에서 변경된 파일에 위 패턴이 남았는지 grep 으로 확인한다 — 검출되면 같은 라운드에서 정리. 세부 규칙: `~/.claude/rules/principles.md` "주석 작성" 절.
 
 ## 매몰 방지
 → ~/.claude/rules/round-agent-protocol.md Cross-Round Escalation + ~/.claude/rules/escalation.md 참조.
